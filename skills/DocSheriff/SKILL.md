@@ -1,10 +1,10 @@
 ---
 name: docsheriff
-description: DocSheriff cleans up, standardizes, and maintains documentation across your codebase. Use when creating new documentation for complex tasks, cleaning up outdated docs, restructuring poorly written documentation, or ensuring docs match actual code structure. Enforces a strict doc contract with machine-readable frontmatter, structured TODOs, and verified code references. Asks for user feedback when uncertain and proposes code TODOs based on documentation gaps.
+description: DocSheriff cleans up, standardizes, and maintains documentation across your codebase. Use when creating new documentation for complex tasks, cleaning up outdated docs, restructuring poorly written documentation, or ensuring docs match actual code structure. Enforces a strict doc contract with machine-readable frontmatter, structured TODOs, and verified code references. Includes monorepo-aware validation that detects package drift, build script mismatches, and stale architecture recommendations. Asks for user feedback when uncertain and proposes code TODOs based on documentation gaps.
 metadata:
-  argument-hint: "[path | audit | check | fix | sync]"
+  argument-hint: "[path | audit | check | fix | sync | monorepo]"
   author: Cory Shelton
-  version: "1.0"
+  version: "2.0"
 ---
 
 # DocSheriff
@@ -408,6 +408,23 @@ Actual changes to documentation files, following minimal diff principle.
 - Guided through template
 - Automatic code scanning for references
 
+### Monorepo Mode
+
+```
+/docsheriff monorepo [--fix]
+```
+
+**For monorepos:** Comprehensive structure validation including:
+- Package drift detection (docs vs actual packages/)
+- Build script validation (build:packages includes all packages)
+- Structure diagram validation (tree diagrams match filesystem)
+- Stale recommendation detection (future work that's already done)
+- Cross-document consistency (all docs reference same package list)
+
+Use `--fix` to auto-apply safe corrections.
+
+See "Monorepo Structure Validation" section for full details.
+
 ### Sync Mode (Docs → Code TODOs)
 
 ```
@@ -520,6 +537,8 @@ What would you like to do?
 2. fix - Apply safe auto-fixes
 3. audit - Full documentation audit
 4. new - Create new documentation
+5. monorepo - Validate monorepo structure & package docs
+6. sync - Generate code TODOs from documentation
 
 Scope?
 1. All documentation
@@ -530,6 +549,7 @@ Options?
 1. Include glossary normalization?
 2. Enforce strict template order?
 3. Generate evidence citations for all changes?
+4. Include package drift detection? (monorepo mode)
 ```
 
 ---
@@ -560,6 +580,224 @@ See `ci-integration.md` for GitHub Actions / CI setup.
 ## Installation
 
 **To use:** Create `.claude/skills/docsheriff/SKILL.md` in any project and paste this content.
+
+---
+
+## Monorepo Structure Validation
+
+For monorepos, DocSheriff performs deep structure validation to catch documentation drift.
+
+### Monorepo Mode
+
+```
+/docsheriff monorepo
+```
+
+Performs comprehensive monorepo-specific validation:
+
+1. **Package Drift Detection** - Compares documented packages against actual `packages/` directory
+2. **Build Script Validation** - Ensures `build:packages` includes all packages
+3. **Structure Diagram Validation** - Verifies tree diagrams match filesystem
+4. **Stale Recommendation Detection** - Finds "future work" that's already completed
+5. **Cross-Doc Consistency** - Ensures all docs reference the same canonical package list
+
+### Package Drift Detection
+
+Compares what packages are documented vs what actually exists:
+
+```markdown
+## Package Drift Report
+
+### Documented but Missing
+| Package | Documented In | Status |
+|---------|--------------|--------|
+| @kestrel/legacy-utils | ARCHITECTURE.md | Not found in packages/ |
+
+### Exist but Undocumented
+| Package | Location | Suggestion |
+|---------|----------|------------|
+| @kestrel/new-feature | packages/new-feature | Add to package overview |
+
+### Name Mismatches
+| Documented Name | Actual Name | Files Affected |
+|-----------------|-------------|----------------|
+| @kestrel/util | @kestrel/utils | 3 docs |
+```
+
+### Build Script Validation
+
+Checks that root `package.json` build scripts include all packages:
+
+```markdown
+## Build Script Analysis
+
+### Root package.json: build:packages
+Current: "turbo run build --filter=./packages/*"
+
+### Missing from build:
+| Package | Has build script? | Suggestion |
+|---------|-------------------|------------|
+| @kestrel/new-pkg | Yes | Add to turbo pipeline |
+
+### In build but no script:
+| Package | Issue |
+|---------|-------|
+| @kestrel/types | No "build" script in package.json |
+```
+
+### Structure Diagram Validation
+
+Verifies ASCII tree diagrams match actual filesystem:
+
+```markdown
+## Structure Diagram Issues
+
+### File: ARCHITECTURE.md (lines 45-78)
+
+Documented structure:
+├── packages/
+│   ├── core/
+│   ├── utils/
+│   └── shared/
+
+Actual structure:
+├── packages/
+│   ├── core/
+│   ├── utils/
+│   ├── shared/
+│   └── new-feature/    ← UNDOCUMENTED
+
+### Suggestions:
+1. Add `new-feature/` to diagram
+2. Or mark diagram with `<!-- partial: core packages only -->`
+```
+
+### Stale Recommendation Detection
+
+Finds "future work" or "TODO" items in docs that have already been completed:
+
+```markdown
+## Stale Recommendations Found
+
+### File: ROADMAP.md
+
+| Line | Recommendation | Status | Evidence |
+|------|---------------|--------|----------|
+| 23 | "Add TypeScript support" | COMPLETED | tsconfig.json exists |
+| 45 | "Create shared utils package" | COMPLETED | packages/utils/ exists |
+| 67 | "Add CI/CD pipeline" | COMPLETED | .github/workflows/ exists |
+
+### Suggested Actions:
+1. Move completed items to "Completed" section
+2. Or remove if no longer relevant
+3. Update status from "planned" to "done"
+```
+
+### Cross-Document Consistency
+
+Ensures all docs reference the same canonical package list:
+
+```markdown
+## Cross-Document Consistency Report
+
+### Canonical Source: packages/README.md
+Packages listed: core, utils, shared, types, cli
+
+### Inconsistencies Found:
+
+| Document | Lists | Missing | Extra |
+|----------|-------|---------|-------|
+| ARCHITECTURE.md | core, utils, shared | types, cli | - |
+| CONTRIBUTING.md | core, utils, types | shared, cli | legacy |
+| docs/setup.md | all 5 | - | - | ✓ |
+
+### Recommendation:
+Create single source of truth in packages/README.md
+Reference via include: `<!-- include: packages/README.md#package-list -->`
+```
+
+### Monorepo Configuration
+
+Create `.docsheriff.yml` in monorepo root:
+
+```yaml
+# .docsheriff.yml
+monorepo:
+  # Package discovery
+  package_paths:
+    - packages/*
+    - apps/*
+
+  # Canonical package list source
+  canonical_source: packages/README.md
+
+  # Build script to validate
+  build_script: build:packages
+
+  # Docs that should list all packages
+  package_docs:
+    - ARCHITECTURE.md
+    - docs/packages.md
+
+  # Structure diagrams to validate
+  structure_diagrams:
+    - file: ARCHITECTURE.md
+      lines: 45-78
+      scope: packages  # Only validate packages/ portion
+
+  # Stale detection
+  stale_markers:
+    - "TODO:"
+    - "FUTURE:"
+    - "PLANNED:"
+    - "Coming soon"
+
+  # Ignore patterns
+  ignore:
+    - packages/deprecated-*
+    - packages/internal-*
+```
+
+### Monorepo Output Example
+
+```markdown
+## DocSheriff Monorepo Validation Report
+
+**Repository:** kestrel-monorepo
+**Date:** 2024-01-21
+**Packages Found:** 12
+
+### Summary
+
+| Check | Status | Issues |
+|-------|--------|--------|
+| Package Drift | ⚠️ | 2 undocumented packages |
+| Build Scripts | ✓ | All packages included |
+| Structure Diagrams | ⚠️ | 1 outdated diagram |
+| Stale Recommendations | ⚠️ | 3 completed items still listed |
+| Cross-Doc Consistency | ✗ | 4 docs have different package lists |
+
+### Critical Issues (Fix Required)
+
+1. **packages/new-feature** not documented anywhere
+2. **ARCHITECTURE.md** diagram missing 2 packages
+3. **CONTRIBUTING.md** references deleted package `legacy`
+
+### Warnings (Review Recommended)
+
+1. ROADMAP.md has 3 completed items still marked as planned
+2. docs/setup.md references old package name `@kestrel/util`
+
+### Auto-Fix Available
+
+Run `/docsheriff monorepo --fix` to:
+- Add missing packages to canonical list
+- Update structure diagrams
+- Fix package name typos
+- Move completed roadmap items
+
+Would you like me to apply these fixes?
+```
 
 ---
 

@@ -11,6 +11,7 @@ DocSheriff enforces a documentation contract across your codebase:
 - **Tracks freshness** - treats doc rot as a first-class concern
 - **Cross-links** docs to code with automatic verification
 - **Syncs** documentation claims with actual code implementation
+- **Monorepo-aware** - detects package drift, build script issues, and stale recommendations
 
 ## Installation
 
@@ -35,6 +36,7 @@ cp SKILL.md .claude/skills/docsheriff/SKILL.md
 | `fix` | Apply safe auto-fixes, add placeholders for meaning changes |
 | `audit` | Full documentation audit with freshness analysis |
 | `new` | Interactive creation of new documentation |
+| `monorepo` | Validate monorepo structure, package docs, and build scripts |
 | `sync` | Generate code TODOs based on documentation gaps |
 
 ### Examples
@@ -51,6 +53,12 @@ cp SKILL.md .claude/skills/docsheriff/SKILL.md
 
 # Create new documentation interactively
 /docsheriff new auth-service
+
+# Validate monorepo structure and package documentation
+/docsheriff monorepo
+
+# Validate and auto-fix monorepo issues
+/docsheriff monorepo --fix
 
 # Sync docs with code and generate TODOs
 /docsheriff sync
@@ -73,6 +81,13 @@ cp SKILL.md .claude/skills/docsheriff/SKILL.md
 - Freshness analysis
 - Cross-link verification
 - Glossary consistency report
+
+### Monorepo Mode
+- Package drift report (documented vs actual packages)
+- Build script validation
+- Structure diagram discrepancies
+- Stale recommendations (completed work still marked as future)
+- Cross-document consistency report
 
 ### Sync Mode
 - Proposed code TODOs based on doc claims
