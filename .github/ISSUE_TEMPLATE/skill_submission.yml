@@ -1,0 +1,88 @@
+name: Skill Submission
+description: Submit a new skill to SkillsHub
+title: "[SKILL] "
+labels: ["new-skill"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for submitting a skill to SkillsHub! Please fill out the information below.
+
+  - type: input
+    id: skill-name
+    attributes:
+      label: Skill Name
+      description: The name of your skill (PascalCase)
+      placeholder: MyAwesomeSkill
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What does your skill do? (1-2 sentences)
+      placeholder: Describe your skill...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Primary Language
+      options:
+        - Markdown
+        - Python
+        - JavaScript
+        - TypeScript
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: tags
+    attributes:
+      label: Tags
+      description: Comma-separated tags for discovery
+      placeholder: automation, documentation, testing
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: platforms
+    attributes:
+      label: Tested Platforms
+      options:
+        - label: macOS
+        - label: Windows
+        - label: Linux
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Submission Checklist
+      description: Please confirm you have completed these items
+      options:
+        - label: I have created a valid skill.json file
+          required: true
+        - label: I have created a README.md with usage instructions
+          required: true
+        - label: My skill does not contain secrets or credentials
+          required: true
+        - label: I have tested my skill locally
+          required: true
+        - label: I have read the CONTRIBUTING.md guidelines
+          required: true
+
+  - type: textarea
+    id: pr-link
+    attributes:
+      label: Pull Request Link
+      description: Link to your PR (if already created)
+      placeholder: https://github.com/LightDriverCS/SkillsHub/pull/...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other information about your skill

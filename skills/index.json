@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2025-01-21T00:00:00Z",
+  "skills": [
+    {
+      "name": "DocSheriff",
+      "version": "1.0.0",
+      "author": "Cory Shelton",
+      "license": "MIT",
+      "description": "Documentation enforcer that cleans up, standardizes, and maintains documentation across your codebase with strict guardrails against accidental rewrites.",
+      "tags": ["documentation", "automation", "linting", "standardization", "maintenance"],
+      "entrypoint": "SKILL.md",
+      "language": "markdown",
+      "path": "DocSheriff"
+    }
+  ],
+  "total_count": 1
+}

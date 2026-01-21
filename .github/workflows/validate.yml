@@ -1,0 +1,39 @@
+name: Validate Skills
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'skills/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'skills/**'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate all skills
+        run: python scripts/validate_skill.py
+
+      - name: Rebuild index
+        run: python scripts/build_index.py
+
+      - name: Check for index changes
+        run: |
+          if git diff --exit-code skills/index.json; then
+            echo "Index is up to date"
+          else
+            echo "::warning::Index needs to be regenerated. Run 'python scripts/build_index.py' and commit the changes."
+            exit 1
+          fi
